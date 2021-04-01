@@ -7,12 +7,32 @@ const bcrypt = require('bcryptjs');
 const Usuario = require('../models/usuario');
 
 const getUsuarios = async(req, res) => {
+    //Nos sirve para obtener un parametro (desde) que es opcional
+    //Number(req.query.desde) || 0;  Esto lo que hace es que si da un NaN lo que hace es que da el valor por defecto 0
+    const desde = Number(req.query.desde) || 0;
+    // console.log(desde);
+    // //Esta parte es importante para la paginación por son como las reglas
+    // const usuarios = await Usuario.find({}, 'nombre email role google')
+    //     .skip(desde)
+    //     .limit(5);
+    // //Para contar users all de la bd
+    // const total = await Usuario.count();
 
-    const usuarios = await Usuario.find({}, 'nombre email password');
+    //Dos promesas ejecutandose
+    const [usuarios, total] = await Promise.all([
+        Usuario
+        .find({}, 'nombre email role google img')
+        .skip(desde)
+        .limit(5),
+
+        Usuario.countDocuments()
+    ])
+
     res.json({
         ok: true,
         usuarios,
-        uid: req.uid
+        uid: req.uid,
+        total
     });
 }
 const crearUsuarios = async(req, res = response) => {
